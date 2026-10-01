@@ -65,6 +65,7 @@
     - patroni_standby_cluster.host | default('') | length < 1 # exclude for standby cluster
 
 # if ssh_key_name or ssh_key_content is not specified (for cluster scaling or standby cluster)
+# AWS can reuse an existing key pair by name without public key content.
 - block:
     - name: Generate a unique temporary SSH key name
       ansible.builtin.set_fact:
@@ -117,6 +118,7 @@
     - state == 'present'
     - cluster_scaling | default(false) | bool or
       patroni_standby_cluster.host | default('') | length > 0
+    - not (cloud_provider | lower == 'aws' and ssh_key_name | length > 0 and ssh_key_content | length < 1)
 
 - name: Import tasks for cloud provider dependencies
   ansible.builtin.import_tasks: dependencies.yml
